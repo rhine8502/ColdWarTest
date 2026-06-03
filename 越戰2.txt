@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>越戰十字路口：1968</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #1a1a2e; /* Dark theme base */
+            color: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #16213e; }
+        ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e94560; }
+
+        /* CRT Scanline effect overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Glitch text effect for titles */
+        .glitch-effect {
+            position: relative;
+            color: white;
+        }
+        .glitch-effect::before, .glitch-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .glitch-effect::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        .glitch-effect::after {
+            left: -2px;
+            text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
+            animation: glitch-anim2 1s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(25px, 9999px, 86px, 0); }
+            20% { clip: rect(61px, 9999px, 12px, 0); }
+            40% { clip: rect(98px, 9999px, 92px, 0); }
+            60% { clip: rect(11px, 9999px, 63px, 0); }
+            80% { clip: rect(48px, 9999px, 34px, 0); }
+            100% { clip: rect(74px, 9999px, 81px, 0); }
+        }
+
+        /* Score Bar Animations */
+        .score-bar-container { background-color: #2a2a40; border-radius: 9999px; overflow: hidden; height: 1.5rem; width: 100%; position: relative; }
+        .score-bar-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: flex-end; padding-right: 0.5rem; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);}
+        .score-text { position: absolute; right: 10px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        /* Factions Colors */
+        .bg-us-gov { background: linear-gradient(90deg, #1e3a8a, #3b82f6); }
+        .bg-us-civ { background: linear-gradient(90deg, #854d0e, #eab308); }
+        .bg-nv-gov { background: linear-gradient(90deg, #14532d, #22c55e); }
+        .bg-soviet { background: linear-gradient(90deg, #7f1d1d, #ef4444); }
+        
+        .text-us-gov { color: #60a5fa; }
+        .text-us-civ { color: #facc15; }
+        .text-nv-gov { color: #4ade80; }
+        .text-soviet { color: #f87171; }
+
+        /* Card styles */
+        .decision-card {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .decision-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border-color: #e94560; }
+        .btn-select { transition: all 0.2s; }
+        .btn-select:active { transform: scale(0.95); }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Typewriter effect */
+        .typewriter {
+            overflow: hidden;
+            border-right: .15em solid #e94560;
+            white-space: pre-wrap;
+            margin: 0 auto;
+            letter-spacing: .05em;
+            animation: blink-caret .75s step-end infinite;
+        }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #e94560; } }
+
+        /* Status indicators */
+        .status-up { color: #4ade80; }
+        .status-down { color: #f87171; }
+        .status-stable { color: #9ca3af; }
+
+        /* Shake animation for events */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .event-shake { animation: shake 0.5s; animation-iteration-count: 1; }
+        
+        /* Background Image Setup */
+        .bg-image-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('美蘇1.png');
+            background-size: cover;
+            background-position: center;
+            z-index: -2; /* Behind everything */
+        }
+
+        /* Overlay to ensure text readability */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(26, 26, 46, 0.85); /* Dark blue-ish tint with 85% opacity */
+            z-index: -1; /* Above image, below content */
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-red-500 selection:text-white">
+    <!-- Background Elements -->
+    <div class="bg-image-container"></div>
+    <div class="bg-overlay"></div>
+    <div class="scanlines"></div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-6 max-w-6xl flex-grow flex flex-col h-screen relative z-10">
+        
+        <!-- Header -->
+        <header class="mb-6 border-b border-gray-700 pb-4 text-center relative">
+            <h1 class="text-4xl md:text-5xl font-black uppercase tracking-widest text-white glitch-effect" data-text="越戰十字路口">越戰十字路口</h1>
+            <h2 class="text-2xl text-red-500 font-bold mt-2 tracking-widest">1968</h2>
+            <div class="absolute top-0 right-0 p-2 hidden md:block text-xs text-gray-500 font-mono">
+                OPERATION: CROSSROADS<br>
+                SEC_LEVEL: TOP SECRET<br>
+                YEAR: 1968-1972
+            </div>
+            
+            <!-- Global Timer -->
+            <div id="global-timer-container" class="hidden mt-4 inline-flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-full border border-gray-600">
+                <i class="fas fa-clock text-yellow-400"></i>
+                <span id="global-timer" class="font-mono text-xl font-bold text-yellow-400">02:00</span>
+            </div>
+        </header>
+
+        <!-- Screens Container -->
+        <main id="app-container" class="flex-grow flex flex-col relative overflow-hidden">
+            
+            <div id="screen-start" class="absolute inset-0 flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+                <div class="bg-gray-900/90 backdrop-blur-sm p-8 rounded-xl border-2 border-gray-600 max-w-2xl text-center shadow-2xl">
+                    <i class="fas fa-globe-americas text-6xl text-blue-500 mb-6 animate-pulse"></i>
+                    <h2 class="text-3xl font-bold mb-4 text-white">冷戰歷史陣營模擬遊戲</h2>
+                    <p class="text-gray-300 mb-6 text-lg leading-relaxed text-left">
+                        這是一場關於1960年代越戰時期的模擬推演。<br><br>
+                        全班將分為<strong>四個陣營</strong>。面對接踵而來的歷史危機，你們必須在時間壓力下做出決策。請記住，你們的選擇不僅決定自身命運，也會連動影響敵對或盟友陣營的存亡。<br><br>
+                        <span class="text-red-400 font-bold">指標歸零，即宣告該陣營歷史性失敗。</span>
+                    </p>
+                    <button onclick="startGame()" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xl uppercase tracking-wider transition-colors shadow-[0_0_15px_rgba(220,38,38,0.5)] btn-select w-full md:w-auto">
+                        <i class="fas fa-play mr-2"></i> 開始模擬推演
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-game" class="absolute inset-0 flex flex-col md:flex-row gap-6 opacity-0 pointer-events-none transition-opacity duration-500 overflow-y-auto pb-10">
+                
+                <!-- Left Panel: Factions Dashboard (Scores) -->
+                <div class="w-full md:w-1/3 flex flex-col gap-4">
+                    <h3 class="text-xl font-bold text-gray-300 uppercase tracking-widest border-b border-gray-700 pb-2 flex justify-between items-center bg-gray-900/80 p-2 rounded backdrop-blur-sm">
+                        <span><i class="fas fa-chart-line mr-2"></i> 陣營狀態矩陣</span>
+                        <span id="round-indicator" class="text-sm bg-gray-700 px-2 py-1 rounded text-white">ROUND 1/3</span>
+                    </h3>
+                    
+                    <!-- Faction: US Gov -->
+                    <div class="bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg border-l-4 border-blue-500 shadow-md faction-box" id="faction-us-gov">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <h4 class="text-blue-400 font-bold text-lg"><i class="fas fa-flag-usa mr-2"></i>美國政府與軍方</h4>
+                                <div class="text-xs text-gray-400 mt-1">核心指標：國內支持度</div>
+                            </div>
+                            <div class="text-2xl font-black text-white score-display" id="score-us-gov">50</div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-fill bg-us-gov" id="bar-us-gov" style="width: 50%;"></div>
+                        </div>
+                        <div class="text-xs mt-2 text-right status-indicator" id="status-us-gov">-</div>
+                    </div>
+
+                    <!-- Faction: US Civ -->
+                    <div class="bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg border-l-4 border-yellow-500 shadow-md faction-box" id="faction-us-civ">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <h4 class="text-yellow-400 font-bold text-lg"><i class="fas fa-peace mr-2"></i>美國反戰平民</h4>
+                                <div class="text-xs text-gray-400 mt-1">核心指標：社會正義感</div>
+                            </div>
+                            <div class="text-2xl font-black text-white score-display" id="score-us-civ">50</div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-fill bg-us-civ" id="bar-us-civ" style="width: 50%;"></div>
+                        </div>
+                        <div class="text-xs mt-2 text-right status-indicator" id="status-us-civ">-</div>
+                    </div>
+
+                    <!-- Faction: NV Gov -->
+                    <div class="bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg border-l-4 border-green-500 shadow-md faction-box" id="faction-nv-gov">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <h4 class="text-green-400 font-bold text-lg"><i class="fas fa-star mr-2"></i>北越與越共</h4>
+                                <div class="text-xs text-gray-400 mt-1">核心指標：全民抗戰意志</div>
+                            </div>
+                            <div class="text-2xl font-black text-white score-display" id="score-nv-gov">50</div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-fill bg-nv-gov" id="bar-nv-gov" style="width: 50%;"></div>
+                        </div>
+                        <div class="text-xs mt-2 text-right status-indicator" id="status-nv-gov">-</div>
+                    </div>
+
+                    <!-- Faction: Soviet -->
+                    <div class="bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg border-l-4 border-red-500 shadow-md faction-box" id="faction-soviet">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <h4 class="text-red-400 font-bold text-lg"><i class="fas fa-hammer mr-2"></i>蘇聯與中國</h4>
+                                <div class="text-xs text-gray-400 mt-1">核心指標：國際共產威望</div>
+                            </div>
+                            <div class="text-2xl font-black text-white score-display" id="score-soviet">50</div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-fill bg-soviet" id="bar-soviet" style="width: 50%;"></div>
+                        </div>
+                        <div class="text-xs mt-2 text-right status-indicator" id="status-soviet">-</div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Event Viewer & Decisions -->
+                <div class="w-full md:w-2/3 flex flex-col bg-gray-900/95 backdrop-blur-md rounded-xl border border-gray-700 p-0 relative overflow-hidden shadow-2xl h-full min-h-[500px]">
+                    <!-- Top terminal bar -->
+                    <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex gap-2 items-center text-xs font-mono text-gray-400">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2" id="terminal-header">SYS.EVENT.MONITOR_ACTV</span>
+                    </div>
+
+                    <!-- Event Content Area -->
+                    <div class="p-6 flex-grow overflow-y-auto" id="event-content-area">
+                        <!-- Content injected via JS -->
+                    </div>
+                    
+                    <!-- Bottom Control Area -->
+                    <div class="bg-gray-800 p-4 border-t border-gray-700 flex justify-between items-center">
+                        <div class="text-sm text-gray-400 font-mono" id="decision-status">等待各組決策輸入...</div>
+                        <button id="btn-next-phase" class="hidden px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition-colors shadow-lg btn-select">
+                            執行決策並結算 <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-end" class="absolute inset-0 flex flex-col items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-500 overflow-y-auto">
+                <div class="bg-gray-900/95 backdrop-blur-md p-8 rounded-xl border-2 border-gray-600 max-w-4xl w-full shadow-2xl text-center">
+                    <h2 class="text-4xl font-black text-white mb-2 uppercase tracking-widest border-b border-gray-700 pb-4">推演結束：歷史總結</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 text-left">
+                        <!-- Survival Status -->
+                        <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                            <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2"><i class="fas fa-flag-checkered mr-2"></i>陣營最終狀態</h3>
+                            <ul id="end-status-list" class="space-y-3 font-mono text-sm">
+                                <!-- Injected via JS -->
+                            </ul>
+                        </div>
+                        
+                        <!-- Debriefing Guide -->
+                        <div class="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                            <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2"><i class="fas fa-chalkboard-teacher mr-2"></i>引導反思 (Debriefing)</h3>
+                            <div class="space-y-4 text-sm text-gray-300">
+                                <p><strong class="text-blue-400">對美國政府：</strong><br>當發現無論怎麼做，國內支持度都在掉時，能體會當時決策者的痛苦嗎？</p>
+                                <p><strong class="text-yellow-400">對美國平民：</strong><br>在國家利益與普世價值（反戰人權）之間拉扯，抗爭真的能改變體制嗎？</p>
+                                <p><strong class="text-red-400">對東方陣營：</strong><br>「抗戰意志」與「威望」的高分背後，隱含著巨大的傷亡。冷戰對抗的代價是什麼？</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="location.reload()" class="mt-8 px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-colors btn-select border border-gray-500">
+                        <i class="fas fa-redo mr-2"></i> 重新開始推演
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="decision-modal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-gray-800 border-2 border-gray-600 rounded-xl p-6 max-w-3xl w-full mx-4 shadow-2xl transform scale-95 transition-transform duration-300" id="decision-modal-content">
+            <h3 class="text-2xl font-bold text-white mb-4 border-b border-gray-700 pb-2" id="modal-title">輸入陣營決策</h3>
+            
+            <div id="modal-form" class="space-y-6 mt-4">
+                <!-- Inputs injected via JS -->
+            </div>
+            
+            <div class="mt-8 flex justify-end gap-4 border-t border-gray-700 pt-4">
+                <button onclick="closeDecisionModal()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors">取消</button>
+                <button onclick="confirmDecisions()" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded font-bold text-white transition-colors shadow-lg btn-select">確認提交</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Game State ---
+        const state = {
+            currentRound: 0,
+            phase: 'start', // start, event_reveal, decision_making, resolution, end
+            timerInterval: null,
+            timeRemaining: 120, // 2 minutes
+            scores: {
+                'us-gov': 50,
+                'us-civ': 50,
+                'nv-gov': 50,
+                'soviet': 50
+            },
+            currentDecisions: {} // stores what each faction chose
+        };
+
+        // --- Game Data (Events and Options) ---
+        const gameData = [
+            {
+                round: 1,
+                year: "1968年1月",
+                title: "春節攻勢",
+                desc: "北越對南越各大城市發動大規模突襲。雖然美軍在軍事上擊退了北越，但美國媒體轉播了血腥畫面，美國大眾震驚發現政府之前說的「勝利在望」全是一場空。",
+                icon: "fa-bomb",
+                factions: [
+                    {
+                        id: 'us-gov', name: '美國政府', color: 'blue',
+                        options: [
+                            { text: "【選項A】加派20萬大軍前往越南，徹底消滅越共。", effects: {'us-gov': -20, 'nv-gov': -20} },
+                            { text: "【選項B】維持現狀，開始嘗試與北越和談。", effects: {'us-gov': 10, 'soviet': 10} }
+                        ]
+                    },
+                    {
+                        id: 'us-civ', name: '美國平民', color: 'yellow',
+                        options: [
+                            { text: "【選項A】發起大規模校園罷課與反戰遊行。", effects: {'us-gov': -20, 'us-civ': 20} },
+                            { text: "【選項B】保持沉默，相信政府的愛國宣傳。", effects: {'us-gov': 10, 'us-civ': -20} }
+                        ]
+                    },
+                    {
+                        id: 'nv-gov', name: '北越政府', color: 'green',
+                        options: [
+                            { text: "【選項A】即使死傷慘重，繼續發動自殺式進攻。", effects: {'nv-gov': 20, 'soviet': 10} },
+                            { text: "【選項B】轉為游擊戰，休養生息。", effects: {'nv-gov': -10, 'us-gov': 10} }
+                        ]
+                    },
+                    {
+                        id: 'soviet', name: '共產老大哥', color: 'red',
+                        options: [
+                            { text: "【選項A】加大武器物資援助，鼓勵北越打到底。", effects: {'soviet': 20, 'nv-gov': 10} },
+                            { text: "【選項B】勸北越克制，避免激怒美國引發核戰。", effects: {'soviet': -20, 'nv-gov': -10} }
+                        ]
+                    }
+                ]
+            },
+            {
+                round: 2,
+                year: "1969年",
+                title: "徵兵抽籤與美萊村屠殺",
+                desc: "美國開始實行著名的「電視直播徵兵抽籤」，許多年輕人被強制送往戰場。同時，美軍在越南屠殺平民的「美萊村事件」被媒體踢爆，舉世震驚。",
+                icon: "fa-id-card-clip",
+                factions: [
+                    {
+                        id: 'us-civ', name: '美國平民', color: 'yellow',
+                        options: [
+                            { text: "【選項A】發起「燒毀徵兵證」與逃兵運動，拒絕當殺人機器。", effects: {'us-civ': 20, 'us-gov': -20} },
+                            { text: "【選項B】雖然痛苦，但為了國家義務乖乖去服兵役。", effects: {'us-civ': -20, 'us-gov': 20} }
+                        ]
+                    },
+                    {
+                        id: 'us-gov', name: '美國政府', color: 'blue',
+                        options: [
+                            { text: "【選項A】強力鎮壓反戰運動，逮捕逃兵學生。", effects: {'us-gov': -10, 'us-civ': -10} },
+                            { text: "【選項B】妥協，承諾逐步撤軍並減少徵兵。", effects: {'us-gov': 10, 'nv-gov': 20} }
+                        ]
+                    },
+                    {
+                        id: 'nv-gov-soviet', name: '北越與老大哥 (聯合決策)', color: 'green', isJoint: true,
+                        options: [
+                            { text: "【選項A】抓準美國內亂，發動全球宣傳戰譴責美軍。", effects: {'nv-gov': 10, 'soviet': 10, 'us-civ': 10, 'us-gov': -20} },
+                            { text: "【選項B】僅在戰場上防守，不進行宣傳挑釁。", effects: {} }
+                        ]
+                    }
+                ]
+            },
+            {
+                round: 3,
+                year: "1972年",
+                title: "大轟炸與後方總崩潰",
+                desc: "戰爭拖了八年。美國政府為了逼北越談判，發動了史上最慘烈的「後衛行動」大轟炸；而國內反戰運動達到巔峰，好萊塢明星親赴北越聲援，社會徹底撕裂。",
+                icon: "fa-fighter-jet",
+                factions: [
+                    {
+                        id: 'us-gov', name: '美國政府', color: 'blue',
+                        options: [
+                            { text: "【選項A】全面轟炸！絕不退縮！", effects: {'us-gov': -30, 'nv-gov': -30} },
+                            { text: "【選項B】無條件全面撤軍。", effects: {'us-gov': -10, 'soviet': 30, 'nv-gov': 20} }
+                        ]
+                    },
+                    {
+                        id: 'us-civ', name: '美國平民', color: 'yellow',
+                        options: [
+                            { text: "【選項A】癱瘓華盛頓抗議！", effects: {'us-civ': 20, 'us-gov': -20} },
+                            { text: "【選項B】心力交瘁，回歸家庭不理政事。", effects: {'us-civ': -30, 'us-gov': 10} }
+                        ]
+                    },
+                    {
+                        id: 'nv-gov', name: '北越政府', color: 'green',
+                        options: [
+                            { text: "【選項A】堅持不退讓！打到底！", effects: {'nv-gov': 20, 'us-gov': -20} },
+                            { text: "【選項B】簽署和平協議，停止流血。", effects: {'nv-gov': -20, 'us-gov': 20} }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // --- STREAMING_CHUNK:Javascript Logic - Core Functions ---
+
+        // Utility: Get Element
+        const el = (id) => document.getElementById(id);
+
+        // Screen Management
+        function showScreen(screenId) {
+            ['screen-start', 'screen-game', 'screen-end'].forEach(id => {
+                const s = el(id);
+                if (id === screenId) {
+                    s.classList.remove('opacity-0', 'pointer-events-none');
+                    s.classList.add('opacity-100');
+                    if(screenId === 'screen-game') s.classList.add('z-20'); // Ensure game is clickable
+                } else {
+                    s.classList.add('opacity-0', 'pointer-events-none');
+                    s.classList.remove('opacity-100', 'z-20');
+                }
+            });
+        }
+
+        // Initialize Game
+        function startGame() {
+            state.currentRound = 0;
+            state.scores = {'us-gov': 50, 'us-civ': 50, 'nv-gov': 50, 'soviet': 50};
+            updateAllScoresUI();
+            showScreen('screen-game');
+            el('global-timer-container').classList.remove('hidden');
+            startRound();
+        }
+
+        // Update specific score UI
+        function updateScoreUI(faction, newValue, diff = 0) {
+            const scoreEl = el(`score-${faction}`);
+            const barEl = el(`bar-${faction}`);
+            const statusEl = el(`status-${faction}`);
+            const boxEl = el(`faction-${faction}`);
+            
+            // Clamp value between 0 and 100
+            const clampedValue = Math.max(0, Math.min(100, newValue));
+            
+            // Animate number
+            animateValue(scoreEl, parseInt(scoreEl.innerText), clampedValue, 1000);
+            
+            // Update bar width
+            barEl.style.width = `${clampedValue}%`;
+
+            // Visual feedback on bar color if critically low
+            if(clampedValue <= 20) {
+                barEl.classList.add('animate-pulse');
+                boxEl.style.borderColor = 'red';
+                boxEl.classList.add('event-shake');
+            } else {
+                barEl.classList.remove('animate-pulse');
+                // Reset border colors based on faction
+                const borderColors = {'us-gov': '#3b82f6', 'us-civ': '#eab308', 'nv-gov': '#22c55e', 'soviet': '#ef4444'};
+                boxEl.style.borderColor = borderColors[faction];
+                boxEl.classList.remove('event-shake');
+            }
+
+            // Update status text
+            if (diff > 0) {
+                statusEl.innerHTML = `<span class="status-up"><i class="fas fa-caret-up"></i> +${diff}</span>`;
+            } else if (diff < 0) {
+                statusEl.innerHTML = `<span class="status-down"><i class="fas fa-caret-down"></i> ${diff}</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="status-stable"><i class="fas fa-minus"></i> 0</span>`;
+            }
+        }
+
+        function updateAllScoresUI() {
+            Object.keys(state.scores).forEach(f => updateScoreUI(f, state.scores[f], 0));
+        }
+
+        // Number animation helper
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Round Flow ---
+
+        function startRound() {
+            if (state.currentRound >= gameData.length) {
+                endGame();
+                return;
+            }
+
+            const currentEvent = gameData[state.currentRound];
+            state.phase = 'event_reveal';
+            state.currentDecisions = {};
+            
+            el('round-indicator').innerText = `ROUND ${state.currentRound + 1}/${gameData.length}`;
+            el('terminal-header').innerText = `SYS.EVENT.YEAR_${currentEvent.year.replace('年','')}`;
+            
+            // Clear status texts
+            document.querySelectorAll('.status-indicator').forEach(el => el.innerHTML = '-');
+
+            renderEventContent(currentEvent);
+        }
+
+        function renderEventContent(event) {
+            const contentArea = el('event-content-area');
+            
+            // Generate HTML for faction options display
+            let factionsHtml = '';
+            event.factions.forEach(f => {
+                factionsHtml += `
+                    <div class="mb-4 bg-gray-800 p-3 rounded border border-gray-700">
+                        <h4 class="font-bold mb-2 text-${f.color}-400">${f.name} 的兩難：</h4>
+                        <ul class="text-sm text-gray-300 space-y-1 pl-4 list-disc marker:text-gray-500">
+                            ${f.options.map(opt => `<li>${opt.text}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+
+            // Map Placeholder added here
+            const mapHtml = `
+                <div class="mb-6 border border-gray-600 rounded-lg overflow-hidden relative group shadow-lg">
+                    <div class="absolute inset-0 bg-blue-900/20 mix-blend-overlay pointer-events-none group-hover:bg-transparent transition-all duration-500"></div>
+                    <img id="vietnam-map" src="越南地圖.jpeg" alt="Vietnam Map" class="w-full h-auto max-h-64 object-contain bg-gray-900 opacity-80 group-hover:opacity-100 transition-all duration-500 grayscale group-hover:grayscale-0">
+                    <div class="absolute bottom-2 right-2 bg-black/80 text-xs text-red-500 font-mono px-2 py-1 rounded border border-red-900/50 backdrop-blur-sm">TOP_SECRET_MAP_VIEW</div>
+                </div>
+            `;
+
+            contentArea.innerHTML = `
+                <div class="mb-2 text-red-500 font-mono text-sm">[CLASSIFIED INTEL RECIEVED]</div>
+                <h2 class="text-3xl font-black text-white mb-1 uppercase"><i class="fas ${event.icon} mr-2"></i> ${event.title}</h2>
+                <div class="text-gray-400 font-mono text-sm mb-4 border-b border-gray-700 pb-2">DATE: ${event.year}</div>
+                
+                ${mapHtml}
+
+                <div class="text-lg text-gray-200 leading-relaxed mb-6 bg-gray-800/50 p-4 border-l-4 border-red-500 typewriter">
+                    ${event.desc}
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-xl font-bold text-gray-400 mb-3 uppercase tracking-widest"><i class="fas fa-tasks mr-2"></i>各陣營決策選項</h3>
+                    ${factionsHtml}
+                </div>
+            `;
+
+            // Trigger shake effect on container
+            contentArea.parentElement.classList.remove('event-shake');
+            void contentArea.parentElement.offsetWidth; // trigger reflow
+            contentArea.parentElement.classList.add('event-shake');
+
+            setupDecisionPhase();
+        }
+
+        function setupDecisionPhase() {
+            state.phase = 'decision_making';
+            state.timeRemaining = 120; // 2 minutes for discussion
+            updateTimerDisplay();
+            
+            el('decision-status').innerText = '請老師主持小組討論，並點擊右側按鈕輸入決策。';
+            
+            const nextBtn = el('btn-next-phase');
+            nextBtn.classList.remove('hidden');
+            nextBtn.innerHTML = '<i class="fas fa-keyboard mr-2"></i> 老師輸入各組決策';
+            nextBtn.onclick = openDecisionModal;
+            nextBtn.className = "px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-bold transition-colors shadow-[0_0_10px_rgba(202,138,4,0.5)] btn-select";
+
+            // Start Timer
+            if(state.timerInterval) clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+                if(state.timeRemaining <= 0) {
+                    clearInterval(state.timerInterval);
+                    el('global-timer').classList.add('animate-pulse', 'text-red-500');
+                    el('decision-status').innerText = '時間到！請立即強制結算。';
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(state.timeRemaining / 60).toString().padStart(2, '0');
+            const s = (state.timeRemaining % 60).toString().padStart(2, '0');
+            el('global-timer').innerText = `${m}:${s}`;
+            
+            if(state.timeRemaining > 30) {
+                 el('global-timer').className = "font-mono text-xl font-bold text-yellow-400";
+            }
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Modal & Resolution ---
+
+        function openDecisionModal() {
+            const currentEvent = gameData[state.currentRound];
+            const form = el('modal-form');
+            form.innerHTML = ''; // Clear previous
+
+            currentEvent.factions.forEach((f, index) => {
+                // Determine placeholder color based on faction
+                const colorHex = f.color === 'blue' ? '3b82f6' : f.color === 'yellow' ? 'eab308' : f.color === 'green' ? '22c55e' : 'ef4444';
+                
+                let optionsHtml = f.options.map((opt, optIdx) => `
+                    <label class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border border-gray-700 rounded bg-gray-900 hover:bg-gray-700 hover:border-${f.color}-500 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <input type="radio" name="decision-${index}" value="${optIdx}" class="form-radio text-red-600 focus:ring-red-500 mt-1 sm:mt-0" required>
+                            <!-- ★ 選項插圖：如果 gameData 裡面有定義 img 網址就會讀取，否則顯示預設佔位圖 ★ -->
+                            <img src="${opt.img || `https://placehold.co/200x120/16213e/${colorHex}?text=Option+${String.fromCharCode(65+optIdx)}`}" alt="Option Image" class="w-full sm:w-28 h-20 object-cover rounded border border-gray-700 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
+                        </div>
+                        <span class="text-gray-200 text-sm flex-grow leading-relaxed">${opt.text}</span>
+                    </label>
+                `).join('');
+
+                form.innerHTML += `
+                    <div class="bg-gray-800 p-4 rounded-lg border-l-4 border-${f.color}-500" data-faction-id="${f.id}" data-joint="${f.isJoint ? 'true' : 'false'}">
+                        <h4 class="font-bold text-lg text-${f.color}-400 mb-3">${f.name} 的選擇</h4>
+                        <div class="space-y-3">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            const modal = el('decision-modal');
+            const content = el('decision-modal-content');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDecisionModal() {
+            const modal = el('decision-modal');
+            const content = el('decision-modal-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            }, 300);
+        }
+
+        function confirmDecisions() {
+            const currentEvent = gameData[state.currentRound];
+            const forms = document.querySelectorAll('#modal-form > div');
+            
+            let allAnswered = true;
+            let tempDecisions = [];
+
+            forms.forEach((formBlock, index) => {
+                const selected = document.querySelector(`input[name="decision-${index}"]:checked`);
+                if (!selected) {
+                    allAnswered = false;
+                    formBlock.classList.add('border-red-500', 'animate-pulse');
+                    setTimeout(() => formBlock.classList.remove('animate-pulse'), 1000);
+                } else {
+                    formBlock.classList.remove('border-red-500');
+                    tempDecisions.push({
+                        factionData: currentEvent.factions[index],
+                        selectedOptionIndex: parseInt(selected.value)
+                    });
+                }
+            });
+
+            if (!allAnswered) {
+                // Should show a message box, but avoiding alert(). Just visually highlight.
+                return;
+            }
+
+            // Save decisions and close modal
+            state.currentDecisions = tempDecisions;
+            closeDecisionModal();
+            
+            // Stop timer
+            clearInterval(state.timerInterval);
+            el('global-timer').className = "font-mono text-xl font-bold text-gray-500";
+            
+            resolveRound();
+        }
+
+        function resolveRound() {
+            state.phase = 'resolution';
+            
+            // Calculate total diffs
+            let totalDiffs = {'us-gov': 0, 'us-civ': 0, 'nv-gov': 0, 'soviet': 0};
+            let resolutionLogHtml = '';
+
+            state.currentDecisions.forEach(dec => {
+                const opt = dec.factionData.options[dec.selectedOptionIndex];
+                const cleanText = opt.text.replace(/【.*?】/, ''); // Remove tag
+                resolutionLogHtml += `<li class="mb-2"><strong class="text-${dec.factionData.color}-400">${dec.factionData.name}</strong> 選擇了：<br><span class="text-gray-300">${cleanText}</span></li>`;
+                
+                // Add effects
+                for (const [factionId, effectValue] of Object.entries(opt.effects)) {
+                    totalDiffs[factionId] += effectValue;
+                }
+            });
+
+            // Update Content Area to show logs
+            const contentArea = el('event-content-area');
+            contentArea.innerHTML = `
+                <h3 class="text-2xl font-black text-white mb-4 uppercase border-b border-gray-700 pb-2"><i class="fas fa-poll mr-2"></i>回合結算報告</h3>
+                <ul class="text-sm bg-gray-900 p-4 rounded border border-gray-700 mb-6">
+                    ${resolutionLogHtml}
+                </ul>
+                <div class="text-center">
+                    <i class="fas fa-cog fa-spin text-4xl text-gray-500 mb-2"></i>
+                    <p class="text-gray-400 font-mono">正在計算連動影響...</p>
+                </div>
+            `;
+
+            // Apply diffs after a short delay for dramatic effect
+            setTimeout(() => {
+                // Remove loading spinner
+                contentArea.querySelector('.fa-cog').parentElement.innerHTML = '<div class="text-green-500 font-mono font-bold text-lg border p-2 border-green-500 inline-block bg-green-900/30">指標已更新完畢</div>';
+                
+                // Apply and Animate Scores
+                for (const [factionId, diff] of Object.entries(totalDiffs)) {
+                    if(diff !== 0) {
+                        state.scores[factionId] += diff;
+                        // Clamp in logic too
+                        state.scores[factionId] = Math.max(0, Math.min(100, state.scores[factionId]));
+                        updateScoreUI(factionId, state.scores[factionId], diff);
+                    }
+                }
+
+                // Check for failure (Zero score) - Simplification: just visual cue for now, game continues to end
+                Object.entries(state.scores).forEach(([id, score]) => {
+                    if(score <= 0) {
+                        el(`faction-${id}`).style.opacity = '0.5';
+                        el(`faction-${id}`).querySelector('h4').innerHTML += ' <span class="text-red-500 text-xs font-black">[崩潰]</span>';
+                    }
+                });
+
+                // Update Next Button
+                const nextBtn = el('btn-next-phase');
+                nextBtn.innerHTML = '進入下一回合 <i class="fas fa-forward ml-2"></i>';
+                nextBtn.className = "px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition-colors shadow-lg btn-select";
+                nextBtn.onclick = () => {
+                    state.currentRound++;
+                    startRound();
+                };
+
+            }, 2000);
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - End Game ---
+
+        function endGame() {
+            state.phase = 'end';
+            el('global-timer-container').classList.add('hidden');
+            showScreen('screen-end');
+
+            const listEl = el('end-status-list');
+            listEl.innerHTML = '';
+
+            const factionNames = {
+                'us-gov': { name: '美國政府與軍方', icon: 'fa-flag-usa' },
+                'us-civ': { name: '美國反戰平民', icon: 'fa-peace' },
+                'nv-gov': { name: '北越與越共', icon: 'fa-star' },
+                'soviet': { name: '蘇聯與中國', icon: 'fa-hammer' }
+            };
+
+            for (const [id, score] of Object.entries(state.scores)) {
+                let statusText = '';
+                let colorClass = '';
+                
+                if (score <= 0) {
+                    statusText = '政權崩潰 / 運動徹底失敗';
+                    colorClass = 'text-red-500';
+                } else if (score < 30) {
+                    statusText = '苟延殘喘，元氣大傷';
+                    colorClass = 'text-yellow-500';
+                } else if (score >= 70) {
+                    statusText = '達成目標，獲得歷史性勝利';
+                    colorClass = 'text-green-500';
+                } else {
+                    statusText = '勉強維持現狀，付出慘痛代價';
+                    colorClass = 'text-gray-300';
+                }
+
+                listEl.innerHTML += `
+                    <li class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="text-gray-400"><i class="fas ${factionNames[id].icon} mr-2 w-4"></i>${factionNames[id].name}</span>
+                        <div class="text-right">
+                            <span class="font-bold text-lg mr-2">${score}</span>
+                            <span class="${colorClass}">${statusText}</span>
+                        </div>
+                    </li>
+                `;
+            }
+        }
+
+        // Initialize display on load
+        window.onload = () => {
+            showScreen('screen-start');
+        };
+
+    </script>
+</body>
+</html>
